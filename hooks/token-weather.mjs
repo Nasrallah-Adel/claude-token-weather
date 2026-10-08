@@ -40,11 +40,14 @@ let usageSnapshot;
 let usageTick;
 // Context limits from the options (warnTokens, dangerTokens), set in register.
 let limits = thresholds(undefined);
+// Where the line draws: "above" (the band above the prompt) or "below" (the hint row under it).
+let placement = "below";
 // Which crossing toasts have fired this conversation; re-armed on /clear.
 let toasted = { warn: false, danger: false };
 
 export function register(on, options) {
   limits = thresholds(options);
+  placement = options?.placement === "above" ? "above" : "below";
 
   on("session.start", async ($, e, next) => {
     const result = await next(e);
@@ -83,12 +86,25 @@ export function register(on, options) {
     return result;
   });
 
-  on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
-    if (e.hasSurvey || readings.length === 0) {
+  // Below the prompt: the dim hint row. The engine's own hint ("auto mode on…") follows the line, dim.
+  on("ui.render", { component: "PromptHint" }, ($, e, next) => {
+    if (placement !== "below" || readings.length === 0) {
       return next(e);
     }
     const { Box, Text } = $.ui.resolve(e);
-    const own = band(Box, Text, e.bodyColumns ?? 80);
+    const own = band(Box, Text, e.viewport?.columns ?? e.props?.bodyColumns ?? 80);
+    const hint = e.props?.hint;
+    return hint
+      ? Box({ flexDirection: "column", children: [own, Text({ dimColor: true, children: `  ${hint}` })] })
+      : own;
+  });
+
+  on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+    if (placement !== "above" || e.props?.hasSurvey || readings.length === 0) {
+      return next(e);
+    }
+    const { Box, Text } = $.ui.resolve(e);
+    const own = band(Box, Text, e.props?.bodyColumns ?? e.viewport?.columns ?? 80);
     // The band is one instance: keep whatever the mods beneath draw, under this line.
     const below = await next(e);
     return below ? Box({ flexDirection: "column", children: [own, below] }) : own;

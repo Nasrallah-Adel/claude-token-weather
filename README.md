@@ -1,7 +1,7 @@
 # token-weather
 
-A Claude Code mod: a one-line forecast of the context window above the prompt, with the
-account's usage windows and the session cost on the same line.
+A Claude Code mod: a one-line forecast of the context window under the prompt (or above it,
+by option), with the account's usage windows and the session cost on the same line.
 
 ```
 ☀ Clear  23% of context  234.3k / 1M   last turns ▇█  ▲ +281  · 5h 28% ↻43m · 7d 35% ↻1d5h · $12.55
@@ -48,15 +48,20 @@ Both lines are yours to move, in `/config` under token-weather, or in `pluginCon
 `token-weather@nasrallah-mods` from the marketplace):
 
 ```
-warnTokens: number     yellow count, ⚠2x tag, first toast (default 200000)
-dangerTokens: number   red count, second toast (default 300000)
+placement: "below" | "above"   under the prompt in the hint row (default), or the band above it
+warnTokens: number             yellow count, ⚠2x tag, first toast (default 200000)
+dangerTokens: number           red count, second toast (default 300000)
 ```
+
+Below, the line takes the hint row and the engine's own hint (`auto mode on (shift+tab to
+cycle)`) is drawn dim after it. Above, it stacks with other band-drawing mods.
 
 ## Notes
 
-- The band above the prompt is one slot shared by every mod. This mod awaits the mods beneath it
-  and stacks its line above theirs, so it coexists with other band-drawing mods such as
-  prompt-cache-control. A mod that draws without passing the band on will hide it.
+- With `placement: "above"`, the band above the prompt is one slot shared by every mod. This mod
+  awaits the mods beneath it and stacks its line above theirs, so it coexists with other
+  band-drawing mods such as prompt-cache-control. A mod that draws without passing the band on
+  will hide it.
 - Windows are empty until the first API response of a session, and off a subscription
   (API key, cloud provider): then only the cost shows.
 - The cost is uncolored, since there is no natural dollar threshold.
