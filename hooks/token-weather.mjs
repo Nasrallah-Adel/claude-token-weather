@@ -92,11 +92,7 @@ export function register(on, options) {
       return next(e);
     }
     const { Box, Text } = $.ui.resolve(e);
-    const own = band(Box, Text, e.viewport?.columns ?? e.props?.bodyColumns ?? 80);
-    const hint = e.props?.hint;
-    return hint
-      ? Box({ flexDirection: "column", children: [own, Text({ dimColor: true, children: `  ${hint}` })] })
-      : own;
+    return band(Box, Text, e.viewport?.columns ?? e.props?.bodyColumns ?? 80, e.props?.hint);
   });
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
@@ -144,7 +140,8 @@ function toastOnCrossing($, tokens) {
   }
 }
 
-function band(Box, Text, columns) {
+// `tail`: the engine's own hint text, drawn dim at the end of the row when the line sits under the prompt.
+function band(Box, Text, columns, tail) {
   const now = readings[readings.length - 1];
   const f = forecastFor(now.percent);
   const trend = trendWord();
@@ -170,6 +167,9 @@ function band(Box, Text, columns) {
   for (const part of usageParts(usageSnapshot, Date.now())) {
     parts.push(Text({ dimColor: true, children: "  · " }));
     parts.push(Text({ color: part.color, bold: Boolean(part.color), children: part.text }));
+  }
+  if (tail) {
+    parts.push(Text({ dimColor: true, wrap: "truncate-end", children: `  · ${tail}` }));
   }
   return Box({ flexDirection: "row", paddingX: 1, children: parts });
 }
