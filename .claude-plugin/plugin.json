@@ -10,12 +10,12 @@
     "placement": {
       "type": "string",
       "title": "Where the line draws",
-      "default": "below",
+      "default": "above",
       "options": [
-        "below",
-        "above"
+        "above",
+        "below"
       ],
-      "description": "below: the hint row under the prompt (the engine's own hint follows it); above: the band above the prompt, stacked with other mods' bands"
+      "description": "above: the band above the prompt, stacked with other mods' bands (default); below: the hint row under the prompt, the engine's own hint drawn after it"
     },
     "warnTokens": {
       "type": "number",

@@ -1,6 +1,6 @@
 # token-weather
 
-A Claude Code mod: a one-line forecast of the context window under the prompt (or above it,
+A Claude Code mod: a one-line forecast of the context window above the prompt (or under it,
 by option), with the account's usage windows and the session cost on the same line.
 
 ```
@@ -48,7 +48,7 @@ Both lines are yours to move, in `/config` under token-weather, or in `pluginCon
 `token-weather@nasrallah-mods` from the marketplace):
 
 ```
-placement: "below" | "above"   under the prompt in the hint row (default), or the band above it
+placement: "above" | "below"   the band above the prompt (default), or the hint row under it
 warnTokens: number             yellow count, ⚠2x tag, first toast (default 200000)
 dangerTokens: number           red count, second toast (default 300000)
 ```

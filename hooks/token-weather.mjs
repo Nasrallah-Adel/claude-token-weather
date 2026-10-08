@@ -41,13 +41,13 @@ let usageTick;
 // Context limits from the options (warnTokens, dangerTokens), set in register.
 let limits = thresholds(undefined);
 // Where the line draws: "above" (the band above the prompt) or "below" (the hint row under it).
-let placement = "below";
+let placement = "above";
 // Which crossing toasts have fired this conversation; re-armed on /clear.
 let toasted = { warn: false, danger: false };
 
 export function register(on, options) {
   limits = thresholds(options);
-  placement = options?.placement === "above" ? "above" : "below";
+  placement = options?.placement === "below" ? "below" : "above";
 
   on("session.start", async ($, e, next) => {
     const result = await next(e);
