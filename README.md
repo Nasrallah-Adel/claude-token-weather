@@ -11,6 +11,10 @@ account's usage windows and the session cost on the same line.
   ☇ Storm under 90%, ↯ Compact soon above.
 - **Token count** (`331.0k`): bold, coloured by size: green under 200k, yellow from 200k, red
   from 300k. The window (`/ 1M`) stays dim.
+- **⚠2x**: shown after the count from 200k up: the prompt is above the long-context line, where
+  1M-context models bill input at a higher rate.
+- **Toasts**: once per conversation when the context passes 200k, and once more at 300k.
+  Re-armed by `/clear`.
 - **Chart**: one bar per recent turn, scaled to the busiest, and the change since the last turn.
 - **5h / 7d**: the 5-hour and weekly rate-limit windows, percent used and `↻` time until reset.
   Green below 50% used, yellow below 80%, red from there.
@@ -35,6 +39,17 @@ To try it from a clone instead, for one session with hot reload:
 ```sh
 git clone https://github.com/Nasrallah-Adel/claude-token-weather.git
 claude --plugin-dir ./claude-token-weather
+```
+
+## Options
+
+Both lines are yours to move, in `/config` under token-weather, or in `pluginConfigs` in
+`~/.claude/settings.json` (the id is `token-weather@skills-dir` for a skills-dir install, or
+`token-weather@nasrallah-mods` from the marketplace):
+
+```
+warnTokens: number     yellow count, ⚠2x tag, first toast (default 200000)
+dangerTokens: number   red count, second toast (default 300000)
 ```
 
 ## Notes

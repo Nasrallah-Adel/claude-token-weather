@@ -18,10 +18,27 @@ const DANGER_PERCENT = 80;
 export const CONTEXT_WARN_TOKENS = 200_000;
 export const CONTEXT_DANGER_TOKENS = 300_000;
 
-export function contextColor(tokens) {
-  if (tokens >= CONTEXT_DANGER_TOKENS) return "red";
-  if (tokens >= CONTEXT_WARN_TOKENS) return "yellow";
+export function contextColor(tokens, warn = CONTEXT_WARN_TOKENS, danger = CONTEXT_DANGER_TOKENS) {
+  if (tokens >= danger) return "red";
+  if (tokens >= warn) return "yellow";
   return "green";
+}
+
+/** "⚠2x" once the prompt is above the long-context line (1M-context models bill input higher there). */
+export function rateTag(tokens, warn = CONTEXT_WARN_TOKENS) {
+  return tokens >= warn ? "⚠2x" : undefined;
+}
+
+/** The two limits from the mod's options: positive numbers, else the defaults; danger never below warn. */
+export function thresholds(options) {
+  const warn = positive(options?.warnTokens, CONTEXT_WARN_TOKENS);
+  const danger = Math.max(warn, positive(options?.dangerTokens, CONTEXT_DANGER_TOKENS));
+  return { warn, danger };
+}
+
+function positive(value, fallback) {
+  const n = typeof value === "string" ? Number(value) : value;
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 export function usageParts(usage, nowMs) {

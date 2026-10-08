@@ -1,6 +1,6 @@
 // Run with: claude plugin test ~/.claude/skills/token-weather
 import { describe, expect, test } from 'claude-code/testing'
-import { usageParts, resetIn, formatPercent, colorFor, contextColor } from '../hooks/usage-status.mjs'
+import { usageParts, resetIn, formatPercent, colorFor, contextColor, rateTag, thresholds } from '../hooks/usage-status.mjs'
 
 const NOW = Date.parse('2026-10-09T10:00:00Z')
 
@@ -83,5 +83,31 @@ describe('contextColor', () => {
     expect(contextColor(299_999)).toBe('yellow')
     expect(contextColor(300_000)).toBe('red')
     expect(contextColor(900_000)).toBe('red')
+  })
+})
+
+describe('contextColor with custom limits', () => {
+  test('uses the limits it is given', () => {
+    expect(contextColor(150_000, 100_000, 400_000)).toBe('yellow')
+    expect(contextColor(400_000, 100_000, 400_000)).toBe('red')
+    expect(contextColor(99_999, 100_000, 400_000)).toBe('green')
+  })
+})
+
+describe('rateTag', () => {
+  test('appears from the warn line', () => {
+    expect(rateTag(199_999)).toBeUndefined()
+    expect(rateTag(200_000)).toBe('⚠2x')
+    expect(rateTag(50_000, 40_000)).toBe('⚠2x')
+  })
+})
+
+describe('thresholds', () => {
+  test('defaults, guards and ordering', () => {
+    expect(thresholds({})).toEqual({ warn: 200_000, danger: 300_000 })
+    expect(thresholds({ warnTokens: 100_000, dangerTokens: 400_000 })).toEqual({ warn: 100_000, danger: 400_000 })
+    expect(thresholds({ warnTokens: 'x', dangerTokens: -5 })).toEqual({ warn: 200_000, danger: 300_000 })
+    expect(thresholds({ warnTokens: 350_000 })).toEqual({ warn: 350_000, danger: 350_000 })
+    expect(thresholds(undefined)).toEqual({ warn: 200_000, danger: 300_000 })
   })
 })

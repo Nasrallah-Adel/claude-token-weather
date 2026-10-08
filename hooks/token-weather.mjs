@@ -17,7 +17,7 @@
 // The host reads on(...) and $.noun.method(...) from source, so they are
 // spelled literally, and helpers that take $ are top-level functions.
 
-import { usageParts, contextColor } from "./usage-status.mjs";
+import { usageParts, contextColor, rateTag, thresholds } from "./usage-status.mjs";
 
 const HISTORY = 12;
 const USAGE_TICK_MS = 60_000;
@@ -38,17 +38,34 @@ let readings = [];
 // The last { rateLimits, cost } the engine reported.
 let usageSnapshot;
 let usageTick;
+// Context limits from the options (warnTokens, dangerTokens), set in register.
+let limits = thresholds(undefined);
+// Which crossing toasts have fired this conversation; re-armed on /clear.
+let toasted = { warn: false, danger: false };
 
-export function register(on) {
+export function register(on, options) {
+  limits = thresholds(options);
+
   on("session.start", async ($, e, next) => {
     const result = await next(e);
     // This mod pins nothing under the prompt; clear an entry an earlier build left.
     $.ui.status(undefined);
     readings = [];
+    toasted = { warn: false, danger: false };
     await takeReading($);
     if (usageTick) usageTick.cancel();
     usageTick = $.clock.every(USAGE_TICK_MS, () => $.ui.invalidate("ui.render"));
     return result;
+  });
+
+  // /clear starts a new conversation in the same process: fresh readings, toasts armed again.
+  on("session.end", ($, e, next) => {
+    if (e.reason === "clear") {
+      readings = [];
+      toasted = { warn: false, danger: false };
+      $.ui.invalidate("ui.render");
+    }
+    return next(e);
   });
 
   on("session.measure", ($, e, next) => {
@@ -93,9 +110,21 @@ async function takeReading($) {
     if (readings.length > HISTORY) {
       readings = readings.slice(-HISTORY);
     }
+    if (tokens > 0) toastOnCrossing($, tokens);
     $.ui.invalidate("ui.render");
   } catch {
     // No reading this turn; the band keeps the last one.
+  }
+}
+
+// One toast per line per conversation: the long-context line, then the danger line.
+function toastOnCrossing($, tokens) {
+  if (tokens >= limits.danger && !toasted.danger) {
+    toasted = { warn: true, danger: true };
+    $.ui.toast(`context passed ${short(limits.danger)}: red zone, consider /compact`);
+  } else if (tokens >= limits.warn && !toasted.warn) {
+    toasted = { ...toasted, warn: true };
+    $.ui.toast(`context passed ${short(limits.warn)}: long-context rate from here`);
   }
 }
 
@@ -107,10 +136,14 @@ function band(Box, Text, columns) {
     Text({ color: f.color, bold: true, children: `${f.icon}  ${f.word}` }),
     Text({ children: `  ${now.percent}% of context` }),
     Text({ children: "  " }),
-    // The token count alone carries the size colour: green under 200k, yellow from 200k, red from 300k.
-    Text({ color: contextColor(now.tokens), bold: true, children: short(now.tokens) }),
+    // The token count alone carries the size colour: green under warn, yellow from warn, red from danger.
+    Text({ color: contextColor(now.tokens, limits.warn, limits.danger), bold: true, children: short(now.tokens) }),
     Text({ dimColor: true, children: ` / ${short(now.window)}` }),
   ];
+  const tag = rateTag(now.tokens, limits.warn);
+  if (tag) {
+    parts.push(Text({ color: contextColor(now.tokens, limits.warn, limits.danger), bold: true, children: ` ${tag}` }));
+  }
   if (columns >= 60) {
     parts.push(Text({ dimColor: true, children: "   last turns " }));
     parts.push(Text({ color: f.color, children: chart() }));
