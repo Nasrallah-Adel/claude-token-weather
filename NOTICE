@@ -1,0 +1,7 @@
+token-weather (local fork)
+
+This mod is derived from the "token-weather" example in
+https://github.com/anthropics/claude-code-playground (claude-code/mods/token-weather),
+Copyright 2026 Anthropic PBC, licensed under the Apache License, Version 2.0.
+
+Modifications Copyright 2026 Nasrallah Adel, under the same license.

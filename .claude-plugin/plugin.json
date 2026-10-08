@@ -1,0 +1,9 @@
+{
+  "name": "token-weather",
+  "version": "0.3.0",
+  "description": "A live forecast of the context window above the prompt: a weather icon, the fill percentage, a chart of the last turns, then the 5-hour and 7-day usage windows with reset countdowns and the session cost. Local fork: the band stacks over other mods' bands.",
+  "author": {
+    "name": "Claude Code DevRel (band); status line entry added locally"
+  },
+  "license": "Apache-2.0"
+}
