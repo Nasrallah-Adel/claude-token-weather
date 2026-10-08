@@ -23,14 +23,14 @@ const HISTORY = 12;
 const USAGE_TICK_MS = 60_000;
 const BARS = "▁▂▃▄▅▆▇█";
 
-// Forecast bands, by percent of the window used (the colour comes from contextColor).
+// Forecast bands, by percent of the window used.
 const FORECAST = [
 // Single-width text symbols, not emoji: they line up in every terminal font.
-  { upTo: 25, icon: "☀", word: "Clear" },
-  { upTo: 50, icon: "☁", word: "Cloudy" },
-  { upTo: 75, icon: "☂", word: "Showers" },
-  { upTo: 90, icon: "☇", word: "Storm" },
-  { upTo: Infinity, icon: "↯", word: "Compact soon" },
+  { upTo: 25, icon: "☀", word: "Clear", color: "yellow" },
+  { upTo: 50, icon: "☁", word: "Cloudy", color: "cyan" },
+  { upTo: 75, icon: "☂", word: "Showers", color: "blue" },
+  { upTo: 90, icon: "☇", word: "Storm", color: "magenta" },
+  { upTo: Infinity, icon: "↯", word: "Compact soon", color: "red" },
 ];
 
 // Readings: { tokens, window, percent }, oldest first.
@@ -102,17 +102,18 @@ async function takeReading($) {
 function band(Box, Text, columns) {
   const now = readings[readings.length - 1];
   const f = forecastFor(now.percent);
-  // The icon and word follow the window's fill; the colour follows the absolute size in tokens.
-  const color = contextColor(now.tokens);
   const trend = trendWord();
   const parts = [
-    Text({ color, bold: true, children: `${f.icon}  ${f.word}` }),
-    Text({ color, children: `  ${now.percent}% of context` }),
-    Text({ color, children: `  ${short(now.tokens)} / ${short(now.window)}` }),
+    Text({ color: f.color, bold: true, children: `${f.icon}  ${f.word}` }),
+    Text({ children: `  ${now.percent}% of context` }),
+    Text({ children: "  " }),
+    // The token count alone carries the size colour: green under 200k, yellow from 200k, red from 300k.
+    Text({ color: contextColor(now.tokens), bold: true, children: short(now.tokens) }),
+    Text({ dimColor: true, children: ` / ${short(now.window)}` }),
   ];
   if (columns >= 60) {
     parts.push(Text({ dimColor: true, children: "   last turns " }));
-    parts.push(Text({ color, children: chart() }));
+    parts.push(Text({ color: f.color, children: chart() }));
     if (trend) {
       parts.push(Text({ dimColor: true, children: `  ${trend}` }));
     }

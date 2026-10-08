@@ -8,8 +8,9 @@ account's usage windows and the session cost on the same line.
 ```
 
 - **Weather**: ☀ Clear under 25% of the window, ☁ Cloudy under 50%, ☂ Showers under 75%,
-  ☇ Storm under 90%, ↯ Compact soon above. The line's colour follows the context size in
-  tokens: green under 200k, yellow from 200k, red from 300k.
+  ☇ Storm under 90%, ↯ Compact soon above.
+- **Token count** (`331.0k`): bold, coloured by size: green under 200k, yellow from 200k, red
+  from 300k. The window (`/ 1M`) stays dim.
 - **Chart**: one bar per recent turn, scaled to the busiest, and the change since the last turn.
 - **5h / 7d**: the 5-hour and weekly rate-limit windows, percent used and `↻` time until reset.
   Green below 50% used, yellow below 80%, red from there.
