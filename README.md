@@ -56,6 +56,6 @@ Pure text/color helpers live in `hooks/usage-status.mjs`.
 
 ## License
 
-Apache-2.0. Derived from the `token-weather` example in
-[anthropics/claude-code-playground](https://github.com/anthropics/claude-code-playground);
-see `NOTICE`.
+Apache-2.0. The context-window forecast started from the `token-weather` example in
+[anthropics/claude-code-playground](https://github.com/anthropics/claude-code-playground); the usage
+windows, cost, colors and band stacking are this repo's. `NOTICE` carries the attribution Apache-2.0 requires.
