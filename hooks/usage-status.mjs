@@ -14,6 +14,15 @@ const WINDOW_LABEL = {
 const WINDOW_ORDER = ["five_hour", "seven_day", "spend_limit"];
 const WARN_PERCENT = 50;
 const DANGER_PERCENT = 80;
+// Context size, in tokens: green below WARN, yellow below DANGER, red from there.
+export const CONTEXT_WARN_TOKENS = 200_000;
+export const CONTEXT_DANGER_TOKENS = 300_000;
+
+export function contextColor(tokens) {
+  if (tokens >= CONTEXT_DANGER_TOKENS) return "red";
+  if (tokens >= CONTEXT_WARN_TOKENS) return "yellow";
+  return "green";
+}
 
 export function usageParts(usage, nowMs) {
   const windows = windowParts(usage?.rateLimits ?? [], nowMs);

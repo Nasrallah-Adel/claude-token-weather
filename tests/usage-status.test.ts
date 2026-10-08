@@ -1,6 +1,6 @@
 // Run with: claude plugin test ~/.claude/skills/token-weather
 import { describe, expect, test } from 'claude-code/testing'
-import { usageParts, resetIn, formatPercent, colorFor } from '../hooks/usage-status.mjs'
+import { usageParts, resetIn, formatPercent, colorFor, contextColor } from '../hooks/usage-status.mjs'
 
 const NOW = Date.parse('2026-10-09T10:00:00Z')
 
@@ -72,5 +72,16 @@ describe('formatPercent', () => {
     expect(formatPercent(7)).toBe('7')
     expect(formatPercent(23.5)).toBe('23.5')
     expect(formatPercent(-1)).toBe('0')
+  })
+})
+
+describe('contextColor', () => {
+  test('green under 200k, yellow to 300k, red above', () => {
+    expect(contextColor(0)).toBe('green')
+    expect(contextColor(199_999)).toBe('green')
+    expect(contextColor(200_000)).toBe('yellow')
+    expect(contextColor(299_999)).toBe('yellow')
+    expect(contextColor(300_000)).toBe('red')
+    expect(contextColor(900_000)).toBe('red')
   })
 })
