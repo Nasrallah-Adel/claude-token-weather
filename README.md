@@ -4,7 +4,7 @@ A Claude Code mod: a one-line forecast of the context window above the prompt, w
 account's usage windows and the session cost on the same line.
 
 ```
-☀ Clear  23% of context  234.3k / 1M   last turns ▇█  ▲ +281 last turn  · 5h 28% ↻43m · 7d 35% ↻1d5h · $12.55
+☀ Clear  23% of context  234.3k / 1M   last turns ▇█  ▲ +281  · 5h 28% ↻43m · 7d 35% ↻1d5h · $12.55
 ```
 
 - **Weather**: ☀ Clear under 25% of the window, ☁ Cloudy under 50%, ☂ Showers under 75%,

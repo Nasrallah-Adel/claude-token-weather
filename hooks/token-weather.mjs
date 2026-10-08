@@ -138,8 +138,8 @@ function trendWord() {
     return "";
   }
   const delta = readings[readings.length - 1].tokens - readings[readings.length - 2].tokens;
-  if (delta > 0) return `▲ +${short(delta)} last turn`;
-  if (delta < 0) return `▼ ${short(-delta)} last turn`;
+  if (delta > 0) return `▲ +${short(delta)}`;
+  if (delta < 0) return `▼ ${short(-delta)}`;
   return "steady";
 }
 
