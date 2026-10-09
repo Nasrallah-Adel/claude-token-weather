@@ -217,7 +217,7 @@ describe('the spend ledger', () => {
     mock.clock(on)
     await start($)
     await measure($)
-    const ui = await band($, 160)
+    const ui = await band($, 220)
     expect(await ui.find({ type: 'Text', text: /today \$17\.55/ })).toBeDefined()
   })
 })
