@@ -36,7 +36,7 @@
       "type": "boolean",
       "title": "Band buttons",
       "default": true,
-      "description": "compact, context, cost and clear buttons at the end of the line when the band is at least 110 columns wide (ctrl+x tab focuses the band, then the letter, or click)"
+      "description": "compact, context, cost and clear buttons at the end of the line, or on the row under it when the line is full (ctrl+x tab focuses the band, then c, x, d or n; or click)"
     },
     "showDailyCost": {
       "type": "boolean",

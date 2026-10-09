@@ -46,7 +46,7 @@ buttons, today's spend, the agents tally) are on.
 
 ## Buttons
 
-With `buttons` on and the band at least 110 columns wide, four buttons end the line (or take
+With `buttons` on and the band at least 51 columns wide, four buttons end the line (or take
 the row under it when the line is full): `[ compact ]`, `[ context ]`, `[ cost ]`, `[ clear ]`.
 Click one, or press ctrl+x tab to focus the band and then its letter: `c`, `x`, `d`, `n`. `compact` asks first when `compactConfirm` is on and passes `compactFocus`
 to the summarizer; `clear` always asks; `context` and `cost` run the slash commands. The buttons
@@ -126,7 +126,7 @@ nothing) and `speak` reads the alert with the system voice.
 | `warnTokens` | number | 200000 | yellow count, ⚠2x tag, first toast |
 | `dangerTokens` | number | 300000 | red count, second toast, /compact suggestion from here |
 | `suggestCompact` | boolean | true | dim `/compact` suggestion after each turn in the red zone |
-| `buttons` | boolean | true | compact, context, cost, clear buttons at 110 columns or more |
+| `buttons` | boolean | true | compact, context, cost, clear buttons beside or under the line, from 51 columns |
 | `showDailyCost` | boolean | true | `today $X · wk $Y` on the line |
 | `showAgents` | boolean | true | `agents 1.2M` on the line |
 | `compactAt` | number | 0 | tokens; compact after the turn that crossed it; 0 off |

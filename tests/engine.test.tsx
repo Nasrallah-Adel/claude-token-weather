@@ -91,7 +91,7 @@ describe('the band', () => {
     await ui.press({ key: 'compact' })
     expect(c.asks.at(-1)).toContain('Compact now?')
     await ui.unmount()
-    const narrow = await band($, 80)
+    const narrow = await band($, 40)
     expect((await narrow.findAll({ type: 'Button' })).length).toBe(0)
     await narrow.unmount()
     // a band too narrow for both puts the buttons under the line, whatever rows it reports

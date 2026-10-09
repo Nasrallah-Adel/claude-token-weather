@@ -6,10 +6,11 @@ import { forecastFor, chart, trendWord, short, HISTORY_BAND } from "./readings.m
 import { usd } from "./spend.mjs";
 
 export const CHART_MIN_COLUMNS = 60;
-export const BUTTONS_MIN_COLUMNS = 110;
 const SEP = "  · ";
 // Buttons as drawn, "[ compact ]" and so on, two spaces before each.
 export const BUTTON_CELLS = 4 * 2 + "[ compact ]".length + "[ context ]".length + "[ cost ]".length + "[ clear ]".length;
+// A band narrower than its own button row has no buttons.
+export const BUTTONS_MIN_COLUMNS = BUTTON_CELLS + 4;
 
 export const BUTTONS = Object.freeze([
   { key: "compact", label: "compact", hotkey: "c" },
