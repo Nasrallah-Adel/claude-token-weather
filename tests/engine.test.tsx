@@ -3,18 +3,18 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { Engine, On } from 'claude-code'
 
-type Calls = { toasts: string[]; commands: { command: string; args?: string }[]; compacts: unknown[]; suggests: string[]; opens: string[]; closes: string[]; notifies: string[]; asks: string[] }
+type Calls = { sessionId: string; toasts: string[]; commands: { command: string; args?: string }[]; compacts: unknown[]; suggests: string[]; opens: string[]; closes: string[]; notifies: string[]; asks: string[] }
 
 const USAGE = { startedAt: 0, context: { tokens: 234_300, window: 1_000_000, percent: 23 }, rateLimits: [{ kind: 'five_hour', percentUsed: 28, resetsAt: '2026-10-09T10:43:00Z' }], cost: { usd: 12.55 } }
 
 function calls(): Calls {
-  return { toasts: [], commands: [], compacts: [], suggests: [], opens: [], closes: [], notifies: [], asks: [] }
+  return { sessionId: 's1', toasts: [], commands: [], compacts: [], suggests: [], opens: [], closes: [], notifies: [], asks: [] }
 }
 
 function fakeEngine(on: On, c: Calls, usage = USAGE, answer = 'Send') {
   let current = usage
   on('session.usage', () => ({ value: current }) as never)
-  on('session.id', () => ({ value: 's1' }) as never)
+  on('session.id', () => ({ value: c.sessionId }) as never)
   on('session.model', () => ({ value: 'claude-fable-5-1' }) as never)
   on('session.start', async ($, e) => ({ cwd: e.cwd }) as never)
   on('session.end', async () => ({ sessionId: 's1' }) as never)
@@ -212,6 +212,27 @@ describe('the spend ledger', () => {
     await measure($)
     const ui = await band($, 160)
     expect(await ui.find({ type: 'Text', text: /today \$17\.55/ })).toBeDefined()
+  })
+})
+
+describe('the spend ledger across /clear', () => {
+  test('a new conversation starts its own row; a cost that keeps running adds only its growth', async ($, on) => {
+    const c = calls()
+    fakeEngine(on, c)
+    mock.store(on)
+    mock.clock(on)
+    await start($)
+    await measure($, { cost: { usd: 1 } })
+    await $.session.end({ reason: 'clear', sessionId: 's1', resume: {} } as never)
+    c.sessionId = 's2'
+    await measure($, { cost: { usd: 0.4 } })
+    expect((await $.command.run({ command: 'weather', args: 'ledger' })).text).toContain('$1.40  2 sessions')
+    await $.session.end({ reason: 'clear', sessionId: 's2', resume: {} } as never)
+    c.sessionId = 's3'
+    await measure($, { cost: { usd: 0.9 } })
+    await measure($, { cost: { usd: 1.2 } })
+    // 1.00 + 0.40 + (0.9 - 0.4) + (1.2 - 0.9)
+    expect((await $.command.run({ command: 'weather', args: 'ledger' })).text).toContain('$2.20  3 sessions')
   })
 })
 

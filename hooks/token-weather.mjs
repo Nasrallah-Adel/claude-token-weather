@@ -34,8 +34,9 @@ let opts = parseOptions(undefined);
 let state = fresh();
 let usageTick;
 let sessionId;
-// This session's own spend row, and what the other sessions add up to.
+// This conversation's own spend row, the session cost it last saw, and what the other rows add up to.
 let ownSpend;
+let lastSeenUsd = 0;
 let othersSpend = { today: 0, week: 0 };
 
 function fresh() {
@@ -77,6 +78,9 @@ export function register(on, options) {
   on("session.end", ($, e, next) => {
     if (e.reason === "clear") {
       state = { ...fresh(), usage: state.usage, spend: state.spend };
+      // The new conversation has an id of its own: its spend starts a row of its own.
+      sessionId = undefined;
+      ownSpend = undefined;
       $.ui.invalidate("ui.render");
     }
     return next(e);
@@ -309,12 +313,21 @@ async function refreshSpend($) {
   $.ui.invalidate("ui.render");
 }
 
+// The session cost is a running total; the row takes what it grew by since the last
+// measure, so a /clear (a new id, a cost that may start over) never loses or doubles a cent.
 async function recordSpend($, cost) {
-  if (!sessionId) return;
+  if (typeof cost !== "number" || !Number.isFinite(cost)) return;
   try {
+    if (!sessionId) {
+      sessionId = await $.session.id();
+      const existing = await $.store.get(spendKey(sessionId));
+      ownSpend = existing && typeof existing.usd === "number" ? existing : undefined;
+    }
+    const delta = cost < lastSeenUsd ? cost : cost - lastSeenUsd;
+    lastSeenUsd = cost;
     const now = Date.now();
-    // The row keeps the day the session started counting; only the amount moves.
-    ownSpend = ownSpend ? { ...ownSpend, usd: cost, at: now } : spendEntry(cost, now);
+    // The row keeps the day the conversation started counting; only the amount grows.
+    ownSpend = ownSpend ? { ...ownSpend, usd: ownSpend.usd + delta, at: now } : spendEntry(delta, now);
     await $.store.set(spendKey(sessionId), ownSpend);
     const own = sumSpend([ownSpend], now);
     set({ spend: { today: othersSpend.today + own.today, week: othersSpend.week + own.week } });
