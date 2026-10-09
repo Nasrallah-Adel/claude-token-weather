@@ -82,15 +82,15 @@ export function buttonSpecs(opts, columns, isWorking) {
 const KEEP_OVER_BUTTONS = 6;
 
 /**
- * The line and the buttons laid out in `columns`: beside each other when they fit, else the
- * buttons on a row of their own (`row: "below"`) when the band has one, else no buttons.
+ * The line and the buttons laid out in `columns`: beside each other when they fit with the
+ * windows and the cost, else the buttons on a row of their own (`row: "below"`). A band
+ * shorter than its tree scrolls, so the second row is never dropped for want of rows.
  */
-export function layoutBand(parts, columns, specs, rows = 1, padding = 2) {
+export function layoutBand(parts, columns, specs, padding = 2) {
   if (specs.length === 0) return { parts: fitParts(parts, columns, padding), buttons: [], row: "same" };
   const withButtons = fitParts(parts, columns, padding + BUTTON_CELLS);
   const kept = withButtons.filter((p) => p.drop >= KEEP_OVER_BUTTONS).length;
   const wanted = parts.filter((p) => p.drop >= KEEP_OVER_BUTTONS).length;
   if (kept >= wanted) return { parts: withButtons, buttons: specs, row: "same" };
-  const alone = fitParts(parts, columns, padding);
-  return rows >= 2 ? { parts: alone, buttons: specs, row: "below" } : { parts: alone, buttons: [], row: "same" };
+  return { parts: fitParts(parts, columns, padding), buttons: specs, row: "below" };
 }

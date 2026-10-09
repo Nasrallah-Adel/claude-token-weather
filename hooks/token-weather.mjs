@@ -442,7 +442,7 @@ function drawBand($, e) {
   const { Box, Text, Button } = $.ui.resolve(e);
   const columns = e.props?.bodyColumns ?? e.viewport?.columns ?? 80;
   const specs = buttonSpecs(opts, columns, Boolean(e.props?.isWorking));
-  const laid = layoutBand(bandParts(state, opts, columns, Date.now()), columns, specs, e.props?.maxRows ?? 1);
+  const laid = layoutBand(bandParts(state, opts, columns, Date.now()), columns, specs);
   const line = laid.parts.map((p) => Text(textProps(p)));
   const buttons = laid.buttons.flatMap((b) => [
     Text({ children: "  " }),

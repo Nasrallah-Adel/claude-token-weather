@@ -94,8 +94,8 @@ describe('the band', () => {
     const narrow = await band($, 80)
     expect((await narrow.findAll({ type: 'Button' })).length).toBe(0)
     await narrow.unmount()
-    // a band with rows to spare puts the buttons under the line instead
-    const twoRow = await $.ui.mount({ plugin: 'token-weather', surface: 'terminal', component: 'AbovePrompt', props: { ...(BAND(120) as object), maxRows: 4 } as never })
+    // a band too narrow for both puts the buttons under the line, whatever rows it reports
+    const twoRow = await $.ui.mount({ plugin: 'token-weather', surface: 'terminal', component: 'AbovePrompt', props: { ...(BAND(120) as object), maxRows: 1 } as never })
     expect((await twoRow.findAll({ type: 'Button' })).length).toBe(4)
     await twoRow.unmount()
     const working = await $.ui.mount({ plugin: 'token-weather', surface: 'terminal', component: 'AbovePrompt', props: BAND(160, true) })
