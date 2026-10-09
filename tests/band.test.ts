@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { bandParts, buttonSpecs, BUTTONS_MIN_COLUMNS } from '../hooks/band.mjs'
+import { bandParts, buttonSpecs, fitParts, layoutBand, BUTTONS_MIN_COLUMNS } from '../hooks/band.mjs'
 import { parseOptions } from '../hooks/options.mjs'
 
 const NOW = Date.parse('2026-10-09T10:00:00Z')
@@ -52,5 +52,57 @@ describe('buttonSpecs', () => {
     expect(buttonSpecs(parseOptions({ buttons: false }), 200, false)).toEqual([])
     expect(buttonSpecs(opts, 200, true)).toEqual([])
     expect(buttonSpecs(opts, 200, false)[0]).toEqual({ key: 'compact', label: 'compact', hotkey: 'c' })
+  })
+})
+
+describe('fitParts', () => {
+  const NOW2 = Date.parse('2026-10-09T10:00:00Z')
+  const wide = bandParts(state, opts, 200, NOW2)
+  const width = (parts: { text: string }[]) => parts.reduce((n, p) => n + [...p.text].length, 0)
+  test('leaves a fitting line alone, drops the least needed parts first until it fits', () => {
+    expect(fitParts(wide, 200, 0)).toEqual(wide)
+    const w = width(wide)
+    const tighter = fitParts(wide, w - 1, 0)
+    expect(width(tighter)).toBeLessThanOrEqual(w - 1)
+    expect(tighter.map((p) => p.text)).not.toContain('agents 1.2M')
+    const tight = fitParts(wide, 60, 0)
+    expect(width(tight)).toBeLessThanOrEqual(60)
+    expect(tight[0].text).toBe('☀  Clear')
+    expect(tight.map((p) => p.text)).toContain('234.3k')
+    expect(tight.some((p) => p.text.includes('last turns'))).toBe(false)
+  })
+  test('reserves room for the buttons', () => {
+    const w = width(wide)
+    expect(width(fitParts(wide, w + 10, 30))).toBeLessThanOrEqual(w - 20)
+  })
+  test('the head always survives', () => {
+    const tiny = fitParts(wide, 10, 0)
+    expect(tiny.map((p) => p.text)).toEqual(['☀  Clear', '  23%', '  ', '234.3k'])
+  })
+})
+
+describe('layoutBand', () => {
+  const NOW3 = Date.parse('2026-10-09T10:00:00Z')
+  const wide = bandParts(state, opts, 200, NOW3)
+  const specs = buttonSpecs(opts, 200, false)
+  const width = (parts: { text: string }[]) => parts.reduce((n, p) => n + [...p.text].length, 0)
+  test('wide: everything and the buttons', () => {
+    const laid = layoutBand(wide, 200, specs)
+    expect(laid.buttons.length).toBe(4)
+    expect(laid.parts.map((p) => p.text)).toContain('agents 1.2M')
+  })
+  test('mid: the spend and agents give way, the buttons stay', () => {
+    const laid = layoutBand(wide, width(wide) + 20, specs)
+    expect(laid.buttons.length).toBe(4)
+    expect(laid.parts.map((p) => p.text)).toContain('5h 28% ↻43m')
+  })
+  test('narrow: the buttons give way before a window does', () => {
+    const laid = layoutBand(wide, 100, specs)
+    expect(laid.buttons).toEqual([])
+    expect(laid.parts.map((p) => p.text)).toContain('5h 28% ↻43m')
+    expect(laid.parts.map((p) => p.text)).toContain('$12.55')
+  })
+  test('no buttons asked: the line alone', () => {
+    expect(layoutBand(wide, 200, []).buttons).toEqual([])
   })
 })
