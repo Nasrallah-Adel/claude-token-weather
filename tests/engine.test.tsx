@@ -21,6 +21,9 @@ function fakeEngine(on: On, c: Calls, usage = USAGE, answer = 'Send') {
   on('session.measure', ($, e) => ({ changed: e.changed }) as never)
   on('session.compact', ($, e) => { c.compacts.push(e.instructions); return { messages: [{ role: 'assistant', text: 'summary', toolUses: [] }] } as never })
   on('turn.complete', ($, e) => ({ text: e.answer, usage: e.usage }) as never)
+  on('turn.step', async function* ($, e) {
+    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: 'end_turn', usage: { model: 'claude-fable-5-1', input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as never
+  })
   on('prompt.submit', ($, e) => ({ text: e.text, origin: e.origin }) as never)
   on('prompt.suggest', ($, e) => { c.suggests.push(e.text); return { isShown: true } as never })
   on('command.register', () => ({ value: { command: 'weather' } }) as never)
@@ -233,6 +236,32 @@ describe('the spend ledger across /clear', () => {
     await measure($, { cost: { usd: 1.2 } })
     // 1.00 + 0.40 + (0.9 - 0.4) + (1.2 - 0.9)
     expect((await $.command.run({ command: 'weather', args: 'ledger' })).text).toContain('$2.20  3 sessions')
+  })
+})
+
+describe('the live count', () => {
+  test('a model request and a command move the count without adding a bar', async ($, on) => {
+    const c = calls()
+    const engine = fakeEngine(on, c)
+    mock.store(on)
+    const clock = mock.clock(on)
+    await start($)
+    await turn($)
+    engine.setUsage({ ...USAGE, context: { tokens: 310_000, window: 1_000_000, percent: 31 } })
+    const stream = $.turn.step({ turnId: 't2', index: 0, model: 'claude-fable-5-1', messageCount: 3 } as never)
+    for (;;) { const n = await stream.next(); if (n.done) break }
+    let ui = await band($, 160)
+    expect(await ui.find({ type: 'Text', text: /310k/ })).toBeDefined()
+    await ui.unmount()
+    engine.setUsage({ ...USAGE, context: { tokens: 50_000, window: 1_000_000, percent: 5 } })
+    await $.command.run({ command: 'cost' })
+    await clock.advance(500)
+    ui = await band($, 160)
+    expect(await ui.find({ type: 'Text', text: /\b50k\b/ })).toBeDefined()
+    const report = await $.command.run({ command: 'weather' })
+    // the start reading and one turn on the chart; the headline is the live count
+    expect(report.text).toContain('last turns (2)')
+    expect(report.text).toContain('5% of context  50k / 1M')
   })
 })
 

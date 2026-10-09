@@ -35,7 +35,7 @@ export function weatherReport(view, opts, nowMs) {
 }
 
 function headline(view) {
-  const now = view.readings[view.readings.length - 1];
+  const now = view.live ?? view.readings[view.readings.length - 1];
   if (!now) return ["token weather: no reading yet (the first API response brings one)"];
   const f = forecastFor(now.percent);
   const model = view.model ? `  ${view.model}` : "";

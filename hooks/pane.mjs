@@ -33,7 +33,7 @@ export function paneRows(state, opts, size, nowMs) {
 }
 
 function headRows(state, opts) {
-  const now = state.readings[state.readings.length - 1];
+  const now = state.live ?? state.readings[state.readings.length - 1];
   if (!now) return [{ text: "no reading yet", dim: true }];
   const f = forecastFor(now.percent);
   const over = now.tokens >= opts.warnTokens ? "  ⚠2x" : "";

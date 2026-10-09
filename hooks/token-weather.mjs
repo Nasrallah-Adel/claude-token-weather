@@ -10,12 +10,16 @@
 // beside it: options, readings, band, guards, spend, weather-command, pane.
 //
 // Hooks: session.start, session.end, session.measure, session.compact,
-// turn.complete, prompt.submit, command.run{weather}, ui.render on
+// turn.step, turn.complete, prompt.submit, command.run, ui.render on
 // PromptHint, AbovePrompt and the weather Pane.
+//
+// Two readings: `live` follows every model request, every command and every
+// measure, so the count on the band is the status line's; `readings` takes
+// one entry per completed turn, for the chart, the trend and the crossings.
 
 import { parseOptions } from "./options.mjs";
 import { pushReading, readingFrom, crossings, short, addAgentUsage, EMPTY_TALLY } from "./readings.mjs";
-import { bandParts, buttonSpecs } from "./band.mjs";
+import { bandParts, buttonSpecs, fitParts, layoutBand } from "./band.mjs";
 import { guardVerdict, rateCrossings, downshiftDue, costWarningDue, windowLabel } from "./guards.mjs";
 import { spendKey, spendEntry, sumSpend, staleKeys, SPEND_PREFIX, usd } from "./spend.mjs";
 import { parseWeatherArgs, weatherReport, ledgerReport, HELP } from "./weather-command.mjs";
@@ -42,6 +46,7 @@ let othersSpend = { today: 0, week: 0 };
 function fresh() {
   return {
     readings: [],
+    live: undefined,
     usage: undefined,
     spend: { today: 0, week: 0 },
     agents: EMPTY_TALLY,
@@ -87,7 +92,7 @@ export function register(on, options) {
   });
 
   on("session.measure", async ($, e, next) => {
-    set({ usage: { rateLimits: e.rateLimits, cost: e.cost } });
+    set({ usage: { rateLimits: e.rateLimits, cost: e.cost }, live: readingFrom(e.context) ?? state.live });
     if (e.changed.includes("cost") && e.cost) await recordSpend($, e.cost.usd);
     onWindowsMoved($, e.rateLimits);
     onCostMoved($, e.cost?.usd);
@@ -101,6 +106,13 @@ export function register(on, options) {
     const instructions = [e.instructions, opts.compactFocus].filter(Boolean).join("\n");
     return next({ ...e, instructions });
   }).catch(($, e, next) => next(e));
+
+  // Each model request moves the live count: the band follows the status line mid-turn.
+  on("turn.step", async function* ($, e, next) {
+    const result = yield* next(e);
+    if (!e.agentId) await liveReading($);
+    return result;
+  });
 
   on("turn.complete", async ($, e, next) => {
     const result = await next(e);
@@ -135,12 +147,21 @@ export function register(on, options) {
   on("command.run", { command: "weather" }, async ($, e) => ({ text: await runWeather($, e) }))
     .catch(($, e, next) => (next.called ? next(e) : { text: `token weather: ${message(next.error?.cause ?? next.error)}` }));
 
+  // A command's rows (/context, /compact, /clear) change the context without a turn: read it again after.
+  on("command.run", async ($, e, next) => {
+    const result = await next(typeof e.args === "string" ? e : { ...e, args: "" });
+    if (e.command !== "weather") defer($, () => liveReading($));
+    return result;
+  }).catch(($, e, next) => next(e));
+
   // Below the prompt: the dim hint row. The engine's own hint ("auto mode on…") follows the line, dim.
   on("ui.render", { component: "PromptHint" }, ($, e, next) => {
     if (opts.placement !== "below" || state.readings.length === 0) return next(e);
     const { Box, Text } = $.ui.resolve(e);
-    const line = bandParts(state, opts, e.viewport?.columns ?? e.props?.bodyColumns ?? 80, Date.now())
-      .map((p) => Text(textProps(p)));
+    const columns = e.viewport?.columns ?? e.props?.bodyColumns ?? 80;
+    // Two cells of padding, and the engine's hint keeps its own room at the end.
+    const reserve = 2 + (e.props?.hint ? [...e.props.hint].length + 4 : 0);
+    const line = fitParts(bandParts(state, opts, columns, Date.now()), columns, reserve).map((p) => Text(textProps(p)));
     if (e.props?.hint) line.push(Text({ dimColor: true, wrap: "truncate-end", children: `  · ${e.props.hint}` }));
     return Box({ flexDirection: "row", paddingX: 1, children: line });
   });
@@ -170,11 +191,25 @@ async function takeReading($) {
     set({
       usage: { rateLimits, cost },
       readings: pushReading(state.readings, reading),
+      live: reading,
       lastTokens: reading.tokens,
     });
     $.ui.invalidate("ui.render");
   } catch {
     // No reading this turn; the band keeps the last one.
+  }
+}
+
+// The count as it stands now, without a bar on the chart.
+async function liveReading($) {
+  try {
+    const { context, rateLimits, cost } = await $.session.usage();
+    const reading = readingFrom(context);
+    if (!reading) return;
+    set({ usage: { rateLimits, cost }, live: reading });
+    $.ui.invalidate("ui.render");
+  } catch {
+    // The band keeps the last reading.
   }
 }
 
@@ -365,7 +400,7 @@ async function runWeather($, e) {
 }
 
 async function reportView($, columns) {
-  const view = { readings: state.readings, usage: state.usage, spend: state.spend, agents: state.agents };
+  const view = { readings: state.readings, live: state.live, usage: state.usage, spend: state.spend, agents: state.agents };
   try {
     const usage = await $.session.usage({ breakdown: "summary", columns });
     return { ...view, categories: usage.context?.breakdown?.categories, model: usage.context?.breakdown?.model ?? (await $.session.model()) };
@@ -406,8 +441,9 @@ function textProps(part) {
 function drawBand($, e) {
   const { Box, Text, Button } = $.ui.resolve(e);
   const columns = e.props?.bodyColumns ?? e.viewport?.columns ?? 80;
-  const line = bandParts(state, opts, columns, Date.now()).map((p) => Text(textProps(p)));
-  const buttons = buttonSpecs(opts, columns, Boolean(e.props?.isWorking)).flatMap((b) => [
+  const laid = layoutBand(bandParts(state, opts, columns, Date.now()), columns, buttonSpecs(opts, columns, Boolean(e.props?.isWorking)));
+  const line = laid.parts.map((p) => Text(textProps(p)));
+  const buttons = laid.buttons.flatMap((b) => [
     Text({ children: "  " }),
     Button({ key: b.key, label: b.label, hotkey: b.hotkey, plain: true, dimColor: true, onPress: () => pressButton($, b.key) }),
   ]);

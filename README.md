@@ -21,8 +21,15 @@ buttons, today's spend, the agents tally) are on.
   red from `dangerTokens`. The window (`/ 1M`) stays dim.
 - **⚠2x**: shown after the count from `warnTokens` up: the prompt is above the long-context line,
   where 1M-context models bill input at a higher rate.
+- **Live count**: the count moves with every model request of a turn, after every command
+  (`/context`, `/compact`, `/clear` change the context without a turn) and on every measure, so it
+  reads as the status line does. The chart, the trend and the crossings still take one reading
+  per completed turn.
 - **Chart**: one bar per recent turn (the last 12), scaled to the busiest, and the change since
   the last turn. Hidden under 60 columns.
+- **Fit**: a band narrower than the line drops parts in order, agents, spend, trend, chart, then
+  the windows and cost, then the window and tag; the buttons give way before a window or the
+  cost does, so a docked pane never pushes the figures off the row.
 - **5h / 7d**: the 5-hour and weekly rate-limit windows, percent used and `↻` time until reset.
   Green below 50% used, yellow below 80%, red from there.
 - **$**: what the session has cost so far, as `/cost` totals it.
@@ -187,9 +194,9 @@ claude plugin test .       # the tests in tests/: pure helpers and the module th
 the file it is handed to); the rest are pure and tested on their own: `options`, `readings`,
 `band`, `guards`, `spend`, `weather-command`, `pane`, `usage-status`.
 
-Hooks: `session.start`, `session.end`, `session.measure`, `session.compact`, `turn.complete`,
-`prompt.submit`, `command.run` (`/weather`), `ui.render` on `AbovePrompt`, `PromptHint` and the
-`weather` pane.
+Hooks: `session.start`, `session.end`, `session.measure`, `session.compact`, `turn.step`,
+`turn.complete`, `prompt.submit`, `command.run` (`/weather`, and every command for the live count),
+`ui.render` on `AbovePrompt`, `PromptHint` and the `weather` pane.
 
 ## License
 
