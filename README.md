@@ -7,7 +7,7 @@ optional actions: compact at a threshold, hold a prompt when a window or a cost 
 offer a cheaper model, notify, beep.
 
 ```
-☀ Clear  23% of context  234.3k / 1M   last turns ▇█  ▲ +281  · 5h 28% ↻43m · 7d 35% ↻1d5h · $12.55 · today $18.40 · wk $31.00 · agents 1.2M  c: compact  x: context  d: cost  n: clear
+☀ Clear  23% of context  234.3k / 1M   last turns ▇█  ▲ +281  · 5h 28% ↻43m · 7d 35% ↻1d5h · $12.55 · today $18.40 · wk $31.00 · agents 1.2M  [ compact ] [ context ] [ cost ] [ clear ]
 ```
 
 Every action is off until you turn it on in `/config`; the hints (the `/compact` suggestion, the
@@ -47,9 +47,8 @@ buttons, today's spend, the agents tally) are on.
 ## Buttons
 
 With `buttons` on and the band at least 110 columns wide, four buttons end the line (or take
-the row under it when the line is full):
-`c: compact`, `x: context`, `d: cost`, `n: clear`. Click one, or press ctrl+x tab to focus the band
-and then the letter. `compact` asks first when `compactConfirm` is on and passes `compactFocus`
+the row under it when the line is full): `[ compact ]`, `[ context ]`, `[ cost ]`, `[ clear ]`.
+Click one, or press ctrl+x tab to focus the band and then its letter: `c`, `x`, `d`, `n`. `compact` asks first when `compactConfirm` is on and passes `compactFocus`
 to the summarizer; `clear` always asks; `context` and `cost` run the slash commands. The buttons
 hide while a turn runs (commands wait for an idle session) and never draw on the hint row
 (`placement: below`).

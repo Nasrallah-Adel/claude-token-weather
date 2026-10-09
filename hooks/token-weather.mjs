@@ -446,7 +446,7 @@ function drawBand($, e) {
   const line = laid.parts.map((p) => Text(textProps(p)));
   const buttons = laid.buttons.flatMap((b) => [
     Text({ children: "  " }),
-    Button({ key: b.key, label: b.label, hotkey: b.hotkey, plain: true, dimColor: true, onPress: () => pressButton($, b.key) }),
+    Button({ key: b.key, label: b.label, hotkey: b.hotkey, onPress: () => pressButton($, b.key) }),
   ]);
   if (laid.row === "below") {
     // The line keeps its row; the buttons take the next one, indented under the forecast word.
@@ -462,7 +462,7 @@ function drawPane($, e) {
   const { Box, Text, Button } = $.ui.resolve(e);
   const size = { columns: e.props?.bodyColumns ?? e.viewport?.columns ?? 60, rows: e.viewport?.rows ?? 24 };
   const rows = paneRows(state, opts, size, Date.now()).map((r) => Text(textProps(r)));
-  const close = Button({ key: "close", label: "close", role: "dismiss", plain: true, dimColor: true, onPress: () => $.ui.close({ id: PANE_ID }) });
+  const close = Button({ key: "close", label: "close", role: "dismiss", onPress: () => $.ui.close({ id: PANE_ID }) });
   return Box({ flexDirection: "column", paddingX: 1, children: [...rows, Text({ children: "" }), close] });
 }
 
