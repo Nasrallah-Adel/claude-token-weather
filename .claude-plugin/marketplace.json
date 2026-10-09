@@ -1,12 +1,16 @@
 {
   "name": "nasrallah-mods",
-  "owner": { "name": "Nasrallah Adel" },
-  "metadata": { "description": "Claude Code mods by Nasrallah Adel." },
+  "owner": {
+    "name": "Nasrallah Adel"
+  },
+  "metadata": {
+    "description": "Claude Code mods by Nasrallah Adel."
+  },
   "plugins": [
     {
       "name": "token-weather",
       "source": "./",
-      "description": "Context-window forecast above the prompt, plus the 5-hour and 7-day usage windows (green/yellow/red) and the session cost on the same line."
+      "description": "Context-window forecast above the prompt with usage windows, cost, today's spend and subagent tally; band buttons, /weather and a pane; optional auto-compact, prompt guards, model downshift, notifications and sound."
     }
   ]
 }
