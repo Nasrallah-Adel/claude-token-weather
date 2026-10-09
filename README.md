@@ -28,8 +28,9 @@ buttons, today's spend, the agents tally) are on.
 - **Chart**: one bar per recent turn (the last 12), scaled to the busiest, and the change since
   the last turn. Hidden under 60 columns.
 - **Fit**: a band narrower than the line drops parts in order, agents, spend, trend, chart, then
-  the windows and cost, then the window and tag; the buttons give way before a window or the
-  cost does, so a docked pane never pushes the figures off the row.
+  the windows and cost, then the window and tag. The buttons sit at the end of the line when
+  they fit beside the windows and the cost, else on a row of their own under it, so a docked
+  pane never pushes the figures off the row.
 - **5h / 7d**: the 5-hour and weekly rate-limit windows, percent used and `↻` time until reset.
   Green below 50% used, yellow below 80%, red from there.
 - **$**: what the session has cost so far, as `/cost` totals it.
@@ -45,7 +46,8 @@ buttons, today's spend, the agents tally) are on.
 
 ## Buttons
 
-With `buttons` on and the band at least 110 columns wide, four buttons end the line:
+With `buttons` on and the band at least 110 columns wide, four buttons end the line (or take
+the row under it when the line is full):
 `c: compact`, `x: context`, `d: cost`, `n: clear`. Click one, or press ctrl+x tab to focus the band
 and then the letter. `compact` asks first when `compactConfirm` is on and passes `compactFocus`
 to the summarizer; `clear` always asks; `context` and `cost` run the slash commands. The buttons

@@ -96,11 +96,18 @@ describe('layoutBand', () => {
     expect(laid.buttons.length).toBe(4)
     expect(laid.parts.map((p) => p.text)).toContain('5h 28% ↻43m')
   })
-  test('narrow: the buttons give way before a window does', () => {
-    const laid = layoutBand(wide, 100, specs)
+  test('narrow, one row: the buttons give way before a window does', () => {
+    const laid = layoutBand(wide, 100, specs, 1)
     expect(laid.buttons).toEqual([])
+    expect(laid.row).toBe('same')
     expect(laid.parts.map((p) => p.text)).toContain('5h 28% ↻43m')
     expect(laid.parts.map((p) => p.text)).toContain('$12.55')
+  })
+  test('narrow, two rows: the buttons move under the line', () => {
+    const laid = layoutBand(wide, 100, specs, 3)
+    expect(laid.buttons.length).toBe(4)
+    expect(laid.row).toBe('below')
+    expect(laid.parts.map((p) => p.text)).toContain('5h 28% ↻43m')
   })
   test('no buttons asked: the line alone', () => {
     expect(layoutBand(wide, 200, []).buttons).toEqual([])

@@ -441,12 +441,20 @@ function textProps(part) {
 function drawBand($, e) {
   const { Box, Text, Button } = $.ui.resolve(e);
   const columns = e.props?.bodyColumns ?? e.viewport?.columns ?? 80;
-  const laid = layoutBand(bandParts(state, opts, columns, Date.now()), columns, buttonSpecs(opts, columns, Boolean(e.props?.isWorking)));
+  const specs = buttonSpecs(opts, columns, Boolean(e.props?.isWorking));
+  const laid = layoutBand(bandParts(state, opts, columns, Date.now()), columns, specs, e.props?.maxRows ?? 1);
   const line = laid.parts.map((p) => Text(textProps(p)));
   const buttons = laid.buttons.flatMap((b) => [
     Text({ children: "  " }),
     Button({ key: b.key, label: b.label, hotkey: b.hotkey, plain: true, dimColor: true, onPress: () => pressButton($, b.key) }),
   ]);
+  if (laid.row === "below") {
+    // The line keeps its row; the buttons take the next one, indented under the forecast word.
+    return Box({ flexDirection: "column", paddingX: 1, children: [
+      Box({ flexDirection: "row", children: line }),
+      Box({ flexDirection: "row", children: [Text({ children: " " }), ...buttons] }),
+    ] });
+  }
   return Box({ flexDirection: "row", paddingX: 1, children: [...line, ...buttons] });
 }
 
